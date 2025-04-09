@@ -1,0 +1,16 @@
+{
+  "name": "name-checker",
+  "version": "0.0.0",
+  "description": "",
+  "main": "name-checker.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Billie Hilton <587740+billiegoose@users.noreply.github.com>",
+  "license": "MIT",
+  "dependencies": {
+    "log-update": "^6.1.0"
+  }
+}
