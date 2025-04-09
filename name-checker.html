@@ -367,51 +367,20 @@
                     }
                 }
             },
-            'Ubuntu (Packages)': {
+            'Ubuntu': {
                 icon: '🐧',
-                description: 'Ubuntu package repository (packages.ubuntu.com)',
+                description: 'Ubuntu package repository',
                 url: (name) => `https://packages.ubuntu.com/search?keywords=${name}&searchon=names&suite=all&section=all`,
                 check: async (name) => {
                     try {
-                        const res = await fetch(`https://packages.ubuntu.com/search?keywords=${encodeURIComponent(name)}&searchon=names&suite=all&section=all`);
-                        if (!res.ok) throw new Error('Ubuntu packages fetch failed');
-                        const text = await res.text();
-                        return { available: !text.includes(`<h1>Package ${name}</h1>`) && !text.includes(`>Package ${name}<`) };
+                        // This will be handled by the serverless function
+                        const res = await fetch(`/api/check-all?name=${encodeURIComponent(name)}`);
+                        if (!res.ok) throw new Error('API request failed');
+                        const data = await res.json();
+                        return data.ubuntu;
                     } catch (e) {
-                        console.error(`Ubuntu packages check failed: ${e.message}`);
-                        return { error: 'CORS Restriction' };
-                    }
-                }
-            },
-            'Debian (Packages)': {
-                icon: '🐧',
-                description: 'Debian package repository (packages.debian.org)',
-                url: (name) => `https://packages.debian.org/search?keywords=${name}&searchon=names&suite=stable&section=all`,
-                check: async (name) => {
-                    try {
-                        const res = await fetch(`https://packages.debian.org/search?keywords=${encodeURIComponent(name)}&searchon=names&suite=stable&section=all`);
-                        if (!res.ok) throw new Error('Debian packages fetch failed');
-                        const text = await res.text();
-                        return { available: !text.includes(`<h1>Package ${name}</h1>`) && !text.includes(`>Package ${name}<`) };
-                    } catch (e) {
-                        console.error(`Debian packages check failed: ${e.message}`);
-                        return { error: 'CORS Restriction' };
-                    }
-                }
-            },
-            'Ubuntu (Launchpad)': {
-                icon: '🐧',
-                description: 'Ubuntu Launchpad API (alternative method)',
-                url: (name) => `https://launchpad.net/ubuntu/+source/${name}`,
-                check: async (name) => {
-                    try {
-                        const res = await fetch(`https://api.launchpad.net/devel/ubuntu/+archive/primary?ws.op=getPublishedSources&source_name=${encodeURIComponent(name)}`);
-                        if (!res.ok) throw new Error('Launchpad API fetch failed');
-                        const text = await res.text();
-                        return { available: text.includes('No matching') || !text.includes(name) };
-                    } catch (e) {
-                        console.error(`Ubuntu Launchpad check failed: ${e.message}`);
-                        return { error: 'CORS Restriction' };
+                        console.error(`Ubuntu check failed: ${e.message}`);
+                        return { error: e.message };
                     }
                 }
             },
@@ -435,13 +404,14 @@
                 url: (name) => `https://search.maven.org/search?q=a:${name}`,
                 check: async (name) => {
                     try {
-                        const res = await fetch(`https://search.maven.org/solrsearch/select?q=a:${encodeURIComponent(name)}`);
-                        if (!res.ok) throw new Error('Maven Central fetch failed');
+                        // This will be handled by the serverless function
+                        const res = await fetch(`/api/check-all?name=${encodeURIComponent(name)}`);
+                        if (!res.ok) throw new Error('API request failed');
                         const data = await res.json();
-                        return { available: data.response.numFound === 0 };
+                        return data.maven;
                     } catch (e) {
                         console.error(`Maven Central check failed: ${e.message}`);
-                        return { error: 'CORS Restriction' };
+                        return { error: e.message };
                     }
                 }
             },
@@ -501,13 +471,14 @@
                 url: (name) => `https://pkg.go.dev/${name}`,
                 check: async (name) => {
                     try {
-                        const res = await fetch(`https://pkg.go.dev/${encodeURIComponent(name)}`);
-                        if (res.url.includes('/404')) return { available: true };
-                        if (res.status === 200) return { available: false };
-                        return { available: res.status === 404 };
+                        // This will be handled by the serverless function
+                        const res = await fetch(`/api/check-all?name=${encodeURIComponent(name)}`);
+                        if (!res.ok) throw new Error('API request failed');
+                        const data = await res.json();
+                        return data.go;
                     } catch (e) {
                         console.error(`Go Modules check failed: ${e.message}`);
-                        return { error: 'CORS Restriction' };
+                        return { error: e.message };
                     }
                 }
             },
@@ -517,16 +488,14 @@
                 url: (name) => `https://juliahub.com/ui/Packages/${name}/`,
                 check: async (name) => {
                     try {
-                        const res = await fetch(`https://juliahub.com/ui/Packages/${encodeURIComponent(name)}/`);
-                        if (res.status === 404) return { available: true };
-                        if (res.status === 200) {
-                            const text = await res.text();
-                            return { available: text.includes('No packages found') };
-                        }
-                        return checkHttpStatus(res);
+                        // This will be handled by the serverless function
+                        const res = await fetch(`/api/check-all?name=${encodeURIComponent(name)}`);
+                        if (!res.ok) throw new Error('API request failed');
+                        const data = await res.json();
+                        return data.julia;
                     } catch (e) {
                         console.error(`Julia Registry check failed: ${e.message}`);
-                        return { error: 'CORS Restriction' };
+                        return { error: e.message };
                     }
                 }
             },
@@ -536,11 +505,14 @@
                 url: (name) => `https://pub.dev/packages/${name}`,
                 check: async (name) => {
                     try {
-                        const res = await fetch(`https://pub.dev/api/packages/${encodeURIComponent(name)}`);
-                        return checkHttpStatus(res);
+                        // This will be handled by the serverless function
+                        const res = await fetch(`/api/check-all?name=${encodeURIComponent(name)}`);
+                        if (!res.ok) throw new Error('API request failed');
+                        const data = await res.json();
+                        return data.dart;
                     } catch (e) {
                         console.error(`Dart/Flutter Pub check failed: ${e.message}`);
-                        return { error: 'CORS Restriction' };
+                        return { error: e.message };
                     }
                 }
             }

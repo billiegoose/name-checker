@@ -1,0 +1,18 @@
+{
+    "version": 2,
+    "routes": [
+        {
+            "handle": "filesystem"
+        },
+        {
+            "src": "/api/(.*)",
+            "dest": "/api/$1"
+        }
+    ],
+    "functions": {
+        "api/check-all.js": {
+            "memory": 1024,
+            "maxDuration": 10
+        }
+    }
+}
