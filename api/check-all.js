@@ -1,4 +1,8 @@
-// Serverless function to handle all CORS-restricted checks
+/**
+ * Serverless function to handle all CORS-restricted checks
+ * This function proxies requests to various package registries that have CORS restrictions
+ * and caches the results for 10 minutes using Vercel's Data Cache
+ */
 export default async function handler(req, res) {
     // Set CORS headers to allow requests from any origin
     res.setHeader('Access-Control-Allow-Origin', '*');

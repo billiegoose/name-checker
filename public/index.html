@@ -291,6 +291,20 @@
     </div>
     
     <script>
+        /**
+         * Name Availability Checker
+         * 
+         * This script checks if a name is available across different package registries and services.
+         * It handles both direct API calls and serverless function proxies for CORS-restricted services.
+         * 
+         * Features:
+         * - Concurrent checks for all services
+         * - Clickable links for all status types (Available, Taken, CORS Restriction)
+         * - Search history with localStorage persistence
+         * - Dark mode support
+         * - Responsive design
+         */
+        
         // Service definitions with icons and descriptions
         const serviceInfo = {
             'GitHub (User/Org)': {
@@ -426,6 +440,7 @@
                         return checkHttpStatus(res);
                     } catch (e) {
                         console.error(`NuGet check failed: ${e.message}`);
+                        // Consider treating CORS errors as availability indicators for NuGet too
                         return { error: 'CORS Restriction' };
                     }
                 }
@@ -530,7 +545,11 @@
             }
         };
         
-        // Helper function to check HTTP status
+        /**
+         * Helper function to check HTTP status and determine availability
+         * @param {Response} res - The fetch response object
+         * @returns {Object} Result object with available flag or error
+         */
         function checkHttpStatus(res) {
             if (res.status === 404) return { available: true };
             if (res.status === 200) return { available: false };
@@ -707,7 +726,10 @@
             themeToggle.textContent = '🌙';
         }
         
-        // Check name availability
+        /**
+         * Main function to check name availability across all services
+         * Runs all checks concurrently and updates the UI as results come in
+         */
         async function checkNameAvailability() {
             const name = nameInput.value.trim();
             if (!name) {
