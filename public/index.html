@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Name Availability Checker</title>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --success-color: #4CAF50;
+            --warning-color: #ff9800;
+            --danger-color: #f44336;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --border-radius: 8px;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background-color: #f5f7fb;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-top: 20px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            display: flex;
+            margin: 30px 0;
+        }
+        
+        input {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: var(--border-radius) 0 0 var(--border-radius);
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        button {
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #3051d3;
+        }
+        
+        button:disabled {
+            background-color: #a0a0a0;
+            cursor: not-allowed;
+        }
+        
+        .note {
+            background-color: #e7f3ff;
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin: 20px 0;
+        }
+        
+        .results-container {
+            margin-top: 30px;
+        }
+        
+        .results-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 15px;
+        }
+        
+        .service-results {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .service-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: var(--border-radius);
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .service-row.available {
+            border-left: 4px solid var(--success-color);
+        }
+        
+        .service-row.taken {
+            border-left: 4px solid var(--danger-color);
+        }
+        
+        .service-row.error {
+            border-left: 4px solid var(--warning-color);
+        }
+        
+        .service-row.loading {
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .service-name {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .service-status {
+            font-size: 14px;
+            margin-left: auto;
+        }
+        
+        .status-icon {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .service-description {
+            color: #777;
+            font-size: 14px;
+            font-weight: normal;
+            margin-left: 5px;
+        }
+        
+        .history-container {
+            margin-top: 20px;
+        }
+        
+        .history-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .history-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .history-item {
+            background-color: #f0f0f0;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .history-item:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--primary-color);
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* Dark mode styles */
+        body.dark-mode {
+            background-color: #1a1a2e;
+            color: #f0f0f0;
+        }
+        
+        body.dark-mode .container {
+            background-color: #16213e;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        body.dark-mode h1 {
+            color: #4cc9f0;
+        }
+        
+        body.dark-mode .note {
+            background-color: #0d1b2a;
+            border-left-color: #4cc9f0;
+        }
+        
+        body.dark-mode input {
+            background-color: #1f2833;
+            border-color: #2c394b;
+            color: #f0f0f0;
+        }
+        
+        body.dark-mode .service-row {
+            background-color: #1f2833;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        body.dark-mode .history-item {
+            background-color: #2c394b;
+            color: #f0f0f0;
+        }
+        
+        body.dark-mode .history-item:hover {
+            background-color: #374357;
+        }
+        
+        body.dark-mode .footer {
+            color: #a0a0a0;
+        }
+    </style>
+</head>
+<body>
+    <button id="themeToggle" class="theme-toggle" title="Toggle dark/light mode">☀️</button>
+    <div class="container">
+        <h1>Name Availability Checker</h1>
+        
+        <div class="note">
+            <strong>About:</strong> This tool checks if a name is available across different package registries and services.
+            Results show which services have CORS restrictions when accessed from a browser.
+        </div>
+        
+        <div class="input-group">
+            <input type="text" id="nameInput" placeholder="Enter a name to check (e.g., react, lodash)">
+            <button id="checkButton">Check Availability</button>
+        </div>
+        
+        <div class="results-container">
+            <div class="results-title">Results</div>
+            <div class="service-results" id="serviceResults"></div>
+            
+            <div class="history-container" id="historyContainer" style="display: none;">
+                <div class="history-title">Recently Checked Names</div>
+                <div class="history-items" id="historyItems"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        Created with ❤️ by Billie Hilton
+    </div>
+    
+    <script>
+        // Service definitions with icons and descriptions
+        const serviceInfo = {
+            'GitHub (User/Org)': {
+                icon: '🐙',
+                description: 'GitHub username or organization name',
+                url: (name) => `https://github.com/${name}`,
+                check: async (name) => {
+                    try {
+                        const headers = { 'User-Agent': 'name-checker-browser/1.0' };
+                        const res = await fetch(`https://api.github.com/users/${name}`, { headers });
+                        return checkHttpStatus(res);
+                    } catch (e) {
+                        console.error(`GitHub check failed: ${e.message}`);
+                        return { error: 'CORS Restriction' };
+                    }
+                }
+            },
+            'PyPI': {
+                icon: '🐍',
+                description: 'Python Package Index',
+                url: (name) => `https://pypi.org/project/${name}/`,
+                check: async (name) => {
+                    try {
+                        const res = await fetch(`https://pypi.org/pypi/${name}/json`);
+                        return checkHttpStatus(res);
+                    } catch (e) {
+                        console.error(`PyPI check failed: ${e.message}`);
+                        return { error: 'CORS Restriction' };
+                    }
+                }
+            },
+            'npm': {
+                icon: '📦',
+                description: 'Node.js package manager',
+                url: (name) => `https://www.npmjs.com/package/${name}`,
+                check: async (name) => {
+                    try {
+                        const res = await fetch(`https://registry.npmjs.org/${name}`);
+                        return checkHttpStatus(res);
+                    } catch (e) {
+                        console.error(`npm check failed: ${e.message}`);
+                        return { error: 'CORS Restriction' };
+                    }
+                }
+            },
+            'crates.io': {
+                icon: '🦀',
+                description: 'Rust package registry',
+                url: (name) => `https://crates.io/crates/${name}`,
+                check: async (name) => {
+                    try {
+                        const url = `https://crates.io/api/v1/crates/${encodeURIComponent(name)}`;
+                        const res = await fetch(url);
+                        return checkHttpStatus(res);
+                    } catch (e) {
+                        console.error(`crates.io check failed: ${e.message}`);
+                        return { error: 'CORS Restriction' };
+                    }
+                }
+            },
+            'Homebrew': {
+                icon: '🍺',
+                description: 'macOS package manager',
+                url: (name) => `https://formulae.brew.sh/formula/${name}`,
+                check: async (name) => {
+                    try {
+                        const res = await fetch('https://formulae.brew.sh/api/formula.json');
+                        if (!res.ok) throw new Error('Homebrew fetch failed');
+                        const data = await res.json();
+                        return { available: !data.some(pkg => pkg.name === name) };
+                    } catch (e) {
+                        console.error(`Homebrew check failed: ${e.message}`);
+                        return { error: 'CORS Restriction' };
+                    }
+                }
+            },
+            'Ubuntu': {
+                icon: '🐧',
+                description: 'Ubuntu package repository',
+                url: (name) => `https://packages.ubuntu.com/search?keywords=${name}&searchon=names&suite=all&section=all`,
+                check: async (name) => {
+                    try {
+                        // This will be handled by the serverless function
+                        const res = await fetch(`/api/check-all?name=${encodeURIComponent(name)}`);
+                        if (!res.ok) throw new Error('API request failed');
+                        const data = await res.json();
+                        return data.ubuntu;
+                    } catch (e) {
+                        console.error(`Ubuntu check failed: ${e.message}`);
+                        return { error: e.message };
+                    }
+                }
+            },
+            'RubyGems': {
+                icon: '💎',
+                description: 'Ruby package manager',
+                url: (name) => `https://rubygems.org/gems/${name}`,
+                check: async (name) => {
+                    try {
+                        const res = await fetch(`https://rubygems.org/api/v1/gems/${encodeURIComponent(name)}.json`);
+                        return checkHttpStatus(res);
+                    } catch (e) {
+                        console.error(`RubyGems check failed: ${e.message}`);
+                        // Treat CORS errors as indicating the name is available
+                        return { available: true, note: 'Based on CORS error (likely available)' };
+                    }
+                }
+            },
+            'Maven Central': {
+                icon: '☕',
+                description: 'Java package repository',
+                url: (name) => `https://search.maven.org/search?q=a:${name}`,
+                check: async (name) => {
+                    try {
+                        // This will be handled by the serverless function
+                        const res = await fetch(`/api/check-all?name=${encodeURIComponent(name)}`);
+                        if (!res.ok) throw new Error('API request failed');
+                        const data = await res.json();
+                        return data.maven;
+                    } catch (e) {
+                        console.error(`Maven Central check failed: ${e.message}`);
+                        return { error: e.message };
+                    }
+                }
+            },
+            'NuGet': {
+                icon: '🔷',
+                description: '.NET package manager',
+                url: (name) => `https://www.nuget.org/packages/${name}`,
+                check: async (name) => {
+                    try {
+                        const res = await fetch(`https://api.nuget.org/v3/registration5-semver1/${encodeURIComponent(name.toLowerCase())}/index.json`);
+                        return checkHttpStatus(res);
+                    } catch (e) {
+                        console.error(`NuGet check failed: ${e.message}`);
+                        return { error: 'CORS Restriction' };
+                    }
+                }
+            },
+            'CPAN (Perl)': {
+                icon: '🐪',
+                description: 'Perl package repository',
+                url: (name) => `https://metacpan.org/pod/${name}`,
+                check: async (name) => {
+                    try {
+                        const res = await fetch(`https://fastapi.metacpan.org/v1/module/${encodeURIComponent(name)}`);
+                        return checkHttpStatus(res);
+                    } catch (e) {
+                        console.error(`CPAN check failed: ${e.message}`);
+                        return { error: 'CORS Restriction' };
+                    }
+                }
+            },
+            'Packagist (PHP)': {
+                icon: '🐘',
+                description: 'PHP/Composer package repository',
+                url: (name) => `https://packagist.org/packages/${name}`,
+                check: async (name) => {
+                    try {
+                        const res = await fetch(`https://packagist.org/search.json?q=${encodeURIComponent(name)}`);
+                        if (!res.ok) throw new Error('Packagist fetch failed');
+                        const data = await res.json();
+                        return { 
+                            available: !data.results.some(pkg =>
+                                pkg.name === name ||
+                                pkg.name.endsWith(`/${name}`) ||
+                                pkg.name.startsWith(`${name}/`)
+                            )
+                        };
+                    } catch (e) {
+                        console.error(`Packagist check failed: ${e.message}`);
+                        return { error: 'CORS Restriction' };
+                    }
+                }
+            },
+            'Go Modules': {
+                icon: '🐹',
+                description: 'Go language package registry',
+                url: (name) => `https://pkg.go.dev/${name}`,
+                check: async (name) => {
+                    try {
+                        // This will be handled by the serverless function
+                        const res = await fetch(`/api/check-all?name=${encodeURIComponent(name)}`);
+                        if (!res.ok) throw new Error('API request failed');
+                        const data = await res.json();
+                        return data.go;
+                    } catch (e) {
+                        console.error(`Go Modules check failed: ${e.message}`);
+                        return { error: e.message };
+                    }
+                }
+            },
+            'Julia Registry': {
+                icon: '🔵',
+                description: 'Julia language package registry',
+                url: (name) => `https://juliahub.com/ui/Packages/${name}/`,
+                check: async (name) => {
+                    try {
+                        // Direct check using the versions.json endpoint
+                        const res = await fetch(`https://juliahub.com/docs/General/${encodeURIComponent(name)}/versions.json`);
+                        
+                        // If we get a 404, the package doesn't exist (it's available)
+                        if (res.status === 404) {
+                            return { available: true };
+                        }
+                        
+                        // If we get a 200, the package exists (it's taken)
+                        if (res.status === 200) {
+                            return { available: false };
+                        }
+                        
+                        // For any other status, return an error
+                        return { error: `Unexpected status ${res.status}` };
+                    } catch (e) {
+                        // Treat fetch failures (like CORS errors) as indicating availability
+                        console.error(`Julia Registry check failed: ${e.message}`);
+                        return { available: true };
+                    }
+                }
+            },
+            'Dart/Flutter Pub': {
+                icon: '🎯',
+                description: 'Dart and Flutter package repository',
+                url: (name) => `https://pub.dev/packages/${name}`,
+                check: async (name) => {
+                    try {
+                        // This will be handled by the serverless function
+                        const res = await fetch(`/api/check-all?name=${encodeURIComponent(name)}`);
+                        if (!res.ok) throw new Error('API request failed');
+                        const data = await res.json();
+                        return data.dart;
+                    } catch (e) {
+                        console.error(`Dart/Flutter Pub check failed: ${e.message}`);
+                        return { error: e.message };
+                    }
+                }
+            }
+        };
+        
+        // Helper function to check HTTP status
+        function checkHttpStatus(res) {
+            if (res.status === 404) return { available: true };
+            if (res.status === 200) return { available: false };
+            return { error: `Unexpected status ${res.status}` };
+        }
+        
+        // DOM elements
+        const nameInput = document.getElementById('nameInput');
+        const checkButton = document.getElementById('checkButton');
+        const serviceResults = document.getElementById('serviceResults');
+        const historyContainer = document.getElementById('historyContainer');
+        const historyItems = document.getElementById('historyItems');
+        const themeToggle = document.getElementById('themeToggle');
+        
+        // Search history
+        let searchHistory = JSON.parse(localStorage.getItem('nameCheckerHistory') || '[]');
+        
+        // Create service rows
+        function createServiceRows() {
+            serviceResults.innerHTML = '';
+            Object.entries(serviceInfo).forEach(([service, info]) => {
+                const row = document.createElement('div');
+                row.className = 'service-row loading';
+                row.id = `service-${service.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`;
+                
+                const nameElement = document.createElement('div');
+                nameElement.className = 'service-name';
+                
+                // Add service name with description
+                nameElement.innerHTML = `
+                    <span class="loading-spinner"></span>${info.icon} ${service}
+                    <span class="service-description">- ${info.description}</span>
+                `;
+                
+                const statusElement = document.createElement('div');
+                statusElement.className = 'service-status';
+                statusElement.textContent = 'Checking...';
+                
+                row.appendChild(nameElement);
+                row.appendChild(statusElement);
+                serviceResults.appendChild(row);
+            });
+        }
+        
+        // Update service row status
+        function updateServiceStatus(service, result) {
+            const rowId = `service-${service.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`;
+            const row = document.getElementById(rowId);
+            if (!row) return;
+            
+            const nameElement = row.querySelector('.service-name');
+            const statusElement = row.querySelector('.service-status');
+            const info = serviceInfo[service];
+            
+            // Remove loading spinner
+            const spinner = nameElement.querySelector('.loading-spinner');
+            if (spinner) spinner.remove();
+            
+            // Update row class and status text
+            if (result.error) {
+                row.className = 'service-row error';
+                nameElement.innerHTML = `
+                    <span class="status-icon">⚠️</span>${info.icon} ${service}
+                    <span class="service-description">- ${info.description}</span>
+                `;
+                
+                // Check if the error is a CORS restriction
+                if (result.error === 'CORS Restriction') {
+                    // Create a hyperlink for CORS restriction errors
+                    const nameValue = nameInput.value.trim();
+                    const link = document.createElement('a');
+                    link.href = info.url(nameValue);
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.textContent = 'CORS Restriction';
+                    link.title = `View ${nameValue} on ${service}`;
+                    statusElement.textContent = '';
+                    statusElement.appendChild(link);
+                } else {
+                    statusElement.textContent = result.error;
+                }
+            } else if (result.available) {
+                row.className = 'service-row available';
+                nameElement.innerHTML = `
+                    <span class="status-icon">✅</span>${info.icon} ${service}
+                    <span class="service-description">- ${info.description}</span>
+                `;
+                
+                // Create a hyperlink for available names
+                const nameValue = nameInput.value.trim();
+                const link = document.createElement('a');
+                link.href = info.url(nameValue);
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                
+                // Just show "Available" without the note
+                link.textContent = 'Available';
+                link.title = `Check ${nameValue} on ${service}`;
+                statusElement.textContent = '';
+                statusElement.appendChild(link);
+            } else {
+                row.className = 'service-row taken';
+                nameElement.innerHTML = `
+                    <span class="status-icon">❌</span>${info.icon} ${service}
+                    <span class="service-description">- ${info.description}</span>
+                `;
+                
+                // Create a hyperlink for taken names
+                const nameValue = nameInput.value.trim();
+                const link = document.createElement('a');
+                link.href = info.url(nameValue);
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = 'Taken';
+                link.title = `View ${nameValue} on ${service}`;
+                statusElement.textContent = '';
+                statusElement.appendChild(link);
+            }
+        }
+        
+        // Update history display
+        function updateHistoryDisplay() {
+            if (searchHistory.length === 0) {
+                historyContainer.style.display = 'none';
+                return;
+            }
+            
+            historyContainer.style.display = 'block';
+            historyItems.innerHTML = '';
+            
+            // Show most recent 10 searches
+            searchHistory.slice(0, 10).forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.textContent = item;
+                historyItem.addEventListener('click', () => {
+                    nameInput.value = item;
+                    checkNameAvailability();
+                });
+                historyItems.appendChild(historyItem);
+            });
+        }
+        
+        // Add to history
+        function addToHistory(name) {
+            // Remove if already exists
+            searchHistory = searchHistory.filter(item => item !== name);
+            
+            // Add to beginning
+            searchHistory.unshift(name);
+            
+            // Keep only last 20
+            if (searchHistory.length > 20) {
+                searchHistory.pop();
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('nameCheckerHistory', JSON.stringify(searchHistory));
+            
+            // Update display
+            updateHistoryDisplay();
+        }
+        
+        // Toggle dark/light mode
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            themeToggle.textContent = document.body.classList.contains('dark-mode') ? '🌙' : '☀️';
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        });
+        
+        // Check for saved dark mode preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            themeToggle.textContent = '🌙';
+        }
+        
+        // Check name availability
+        async function checkNameAvailability() {
+            const name = nameInput.value.trim();
+            if (!name) {
+                alert('Please enter a name to check');
+                return;
+            }
+            
+            // Add to history
+            addToHistory(name);
+            
+            // Disable input during check
+            nameInput.disabled = true;
+            checkButton.disabled = true;
+            
+            // Create service rows
+            createServiceRows();
+            
+            console.log(`Checking availability for name: ${name}`);
+            
+            // Create an array of promises for all service checks
+            const checkPromises = Object.entries(serviceInfo).map(async ([service, info]) => {
+                console.log(`Starting check for ${service}...`);
+                try {
+                    const result = await info.check(name);
+                    console.log(`Completed check for ${service}`);
+                    updateServiceStatus(service, result);
+                    return { service, result, success: true };
+                } catch (error) {
+                    console.error(`Error checking ${service}: ${error.message}`);
+                    updateServiceStatus(service, { error: error.message });
+                    return { service, error, success: false };
+                }
+            });
+            
+            // Run all checks concurrently
+            try {
+                await Promise.all(checkPromises);
+                console.log('All checks completed.');
+            } catch (error) {
+                console.error('Error during concurrent checks:', error);
+            } finally {
+                // Re-enable input
+                nameInput.disabled = false;
+                checkButton.disabled = false;
+            }
+        }
+        
+        // Event listeners
+        checkButton.addEventListener('click', checkNameAvailability);
+        nameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkNameAvailability();
+        });
+        
+        // Initialize history display
+        updateHistoryDisplay();
+    </script>
+</body>
+</html>

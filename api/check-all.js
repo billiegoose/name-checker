@@ -22,11 +22,10 @@ export default async function handler(req, res) {
 
     // Run all checks in parallel
     try {
-        const [ubuntuResult, mavenResult, goResult, juliaResult, dartResult] = await Promise.all([
+        const [ubuntuResult, mavenResult, goResult, dartResult] = await Promise.all([
             checkUbuntu(name),
             checkMaven(name),
             checkGo(name),
-            checkJulia(name),
             checkDart(name)
         ]);
 
@@ -34,7 +33,6 @@ export default async function handler(req, res) {
         results.ubuntu = ubuntuResult;
         results.maven = mavenResult;
         results.go = goResult;
-        results.julia = juliaResult;
         results.dart = dartResult;
 
         return res.status(200).json(results);
@@ -51,10 +49,27 @@ function checkHttpStatus(res) {
     return { error: `Unexpected status ${res.status}` };
 }
 
+// Cache duration in seconds (10 minutes)
+const CACHE_DURATION = 600;
+
+// Fetch with caching
+async function cachedFetch(url) {
+    try {
+        // Use Vercel's Data Cache with a 10-minute revalidation period
+        const res = await fetch(url, {
+            next: { revalidate: CACHE_DURATION }
+        });
+        return res;
+    } catch (error) {
+        console.error(`Cached fetch failed for ${url}: ${error.message}`);
+        throw error;
+    }
+}
+
 // Ubuntu check
 async function checkUbuntu(name) {
     try {
-        const res = await fetch(`https://packages.ubuntu.com/search?keywords=${encodeURIComponent(name)}&searchon=names&suite=all&section=all`);
+        const res = await cachedFetch(`https://packages.ubuntu.com/search?keywords=${encodeURIComponent(name)}&searchon=names&suite=all&section=all`);
         if (!res.ok) throw new Error('Ubuntu packages fetch failed');
         const text = await res.text();
         return { available: !text.includes(`<h1>Package ${name}</h1>`) && !text.includes(`>Package ${name}<`) };
@@ -67,7 +82,7 @@ async function checkUbuntu(name) {
 // Maven Central check
 async function checkMaven(name) {
     try {
-        const res = await fetch(`https://search.maven.org/solrsearch/select?q=a:${encodeURIComponent(name)}`);
+        const res = await cachedFetch(`https://search.maven.org/solrsearch/select?q=a:${encodeURIComponent(name)}`);
         if (!res.ok) throw new Error('Maven Central fetch failed');
         const data = await res.json();
         return { available: data.response.numFound === 0 };
@@ -80,7 +95,7 @@ async function checkMaven(name) {
 // Go Modules check
 async function checkGo(name) {
     try {
-        const res = await fetch(`https://pkg.go.dev/${encodeURIComponent(name)}`);
+        const res = await cachedFetch(`https://pkg.go.dev/${encodeURIComponent(name)}`);
         if (res.url.includes('/404')) return { available: true };
         if (res.status === 200) return { available: false };
         return { available: res.status === 404 };
@@ -90,26 +105,11 @@ async function checkGo(name) {
     }
 }
 
-// Julia Registry check
-async function checkJulia(name) {
-    try {
-        const res = await fetch(`https://juliahub.com/ui/Packages/${encodeURIComponent(name)}/`);
-        if (res.status === 404) return { available: true };
-        if (res.status === 200) {
-            const text = await res.text();
-            return { available: text.includes('No packages found') };
-        }
-        return checkHttpStatus(res);
-    } catch (error) {
-        console.error(`Julia check failed: ${error.message}`);
-        return { error: error.message };
-    }
-}
 
 // Dart/Flutter Pub check
 async function checkDart(name) {
     try {
-        const res = await fetch(`https://pub.dev/api/packages/${encodeURIComponent(name)}`);
+        const res = await cachedFetch(`https://pub.dev/api/packages/${encodeURIComponent(name)}`);
         return checkHttpStatus(res);
     } catch (error) {
         console.error(`Dart check failed: ${error.message}`);
