@@ -141,6 +141,16 @@
             margin-left: auto;
         }
         
+        .service-status a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .service-status a:hover {
+            text-decoration: underline;
+        }
+        
         .status-icon {
             margin-right: 8px;
             font-size: 18px;
@@ -215,6 +225,16 @@
             color: #666;
         }
         
+        .footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
         /* Dark mode styles */
         body.dark-mode {
             background-color: #1a1a2e;
@@ -246,6 +266,10 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }
         
+        body.dark-mode .service-status a {
+            color: #4cc9f0;
+        }
+        
         body.dark-mode .history-item {
             background-color: #2c394b;
             color: #f0f0f0;
@@ -257,6 +281,10 @@
         
         body.dark-mode .footer {
             color: #a0a0a0;
+        }
+        
+        body.dark-mode .footer a {
+            color: #4cc9f0;
         }
     </style>
 </head>
@@ -286,7 +314,8 @@
     </div>
     
     <div class="footer">
-        Created with ❤️ by Billie Hilton
+        Created with ❤️ by <a href="https://github.com/billiegoose" target="_blank" rel="noopener noreferrer">Billie Hilton</a> | 
+        <a href="https://github.com/billiegoose/name-checker" target="_blank" rel="noopener noreferrer">View on GitHub</a>
     </div>
     
     <script>
@@ -719,10 +748,26 @@
             localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
         });
         
-        // Check for saved dark mode preference
-        if (localStorage.getItem('darkMode') === 'true') {
+        // Check for system dark mode preference or saved preference
+        const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedDarkMode = localStorage.getItem('darkMode');
+        
+        // Apply dark mode if system prefers it or user has explicitly enabled it
+        // User preference takes precedence over system preference
+        if (savedDarkMode === 'true' || (savedDarkMode !== 'false' && prefersDarkMode)) {
             document.body.classList.add('dark-mode');
             themeToggle.textContent = '🌙';
+        }
+        
+        // Listen for changes to system dark mode preference
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                // Only apply if user hasn't set a preference
+                if (localStorage.getItem('darkMode') === null) {
+                    document.body.classList.toggle('dark-mode', e.matches);
+                    themeToggle.textContent = e.matches ? '🌙' : '☀️';
+                }
+            });
         }
         
         /**
