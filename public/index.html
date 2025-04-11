@@ -70,65 +70,6 @@
             transition: background-color 0.3s;
         }
         
-        /* Mobile responsiveness */
-        @media (max-width: 480px) {
-            .container {
-                padding: 20px 15px;
-                max-width: 100%;
-                box-sizing: border-box;
-            }
-            
-            .input-group {
-                flex-direction: column;
-                margin: 20px 0;
-                max-width: 100%;
-            }
-            
-            input {
-                border-radius: var(--border-radius);
-                margin-bottom: 12px;
-                width: 100%;
-                max-width: 100%;
-                box-sizing: border-box;
-                padding: 14px 16px;
-                font-size: 16px;
-            }
-            
-            button {
-                border-radius: var(--border-radius);
-                width: 100%;
-                padding: 14px 24px;
-                font-size: 16px;
-            }
-            
-            .service-row {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 15px;
-            }
-            
-            .service-status {
-                margin-left: 0;
-                margin-top: 8px;
-                align-self: flex-end;
-            }
-            
-            .service-description {
-                display: block;
-                margin-left: 5px;
-                margin-top: 4px;
-            }
-            
-            .history-items {
-                gap: 6px;
-            }
-            
-            .history-item {
-                padding: 6px 12px;
-                font-size: 14px;
-            }
-        }
-        
         button:hover {
             background-color: #3051d3;
         }
@@ -268,10 +209,14 @@
         
         .theme-toggle {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 5px;
+            right: 5px;
+            padding: 10px;
+            width: 3em;
+            height: 3em;
             background: none;
             border: none;
+            border-radius: 50%;
             font-size: 24px;
             cursor: pointer;
             color: var(--primary-color);
@@ -338,12 +283,92 @@
             background-color: #374357;
         }
         
+        body.dark-mode .results-title {
+            color: #f0f0f0;
+        }
+        
         body.dark-mode .footer {
             color: #a0a0a0;
         }
         
         body.dark-mode .footer a {
             color: #4cc9f0;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 480px) {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+            
+            body.dark-mode {
+                background-color: #16213e;
+            }
+            
+            .theme-toggle {
+                font-size: 18px;
+            }
+
+            body.dark-mode .container,
+            .container {
+                padding: 20px 15px;
+                max-width: 100%;
+                box-sizing: border-box;
+                box-shadow: none;
+                border-radius: 0;
+                margin: 0;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                margin: 20px 0;
+                max-width: 100%;
+            }
+            
+            input {
+                border-radius: var(--border-radius);
+                margin-bottom: 12px;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                padding: 14px 16px;
+                font-size: 16px;
+            }
+            
+            #checkButton {
+                border-radius: var(--border-radius);
+                width: 100%;
+                padding: 14px 24px;
+                font-size: 16px;
+            }
+            
+            .service-row {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 15px;
+            }
+            
+            .service-status {
+                margin-left: 0;
+                margin-top: 8px;
+                align-self: flex-end;
+            }
+            
+            .service-description {
+                display: block;
+                margin-left: 5px;
+                margin-top: 4px;
+            }
+            
+            .history-items {
+                gap: 6px;
+            }
+            
+            .history-item {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
